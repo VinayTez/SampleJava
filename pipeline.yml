@@ -1,0 +1,46 @@
+trigger: 
+- none
+
+stages:
+- stage: Build
+  displayName: Build stage
+  jobs:
+  - job: Build
+    displayName: Maven package and Publish artifacts
+    pool:
+      # name: Default
+      # demands:
+      # - agent.name -equals agent-vm 
+      vmImage: 'ubuntu-latest' # If running on MS agent
+
+    steps:
+    - task: Maven@4
+      displayName: Maven Package
+      inputs:
+        mavenPomFile: 'pom.xml'
+        publishJUnitResults: true
+        testResultsFiles: '**/surefire-reports/TEST-*.xml'
+        javaHomeOption: 'JDKVersion'
+        mavenVersionOption: 'Default'
+        effectivePomSkip: false
+        sonarQubeRunAnalysis: false
+
+    - task: CopyFiles@2
+      displayName: Copy files to Artifact staging sirectory
+      inputs:
+        SourceFolder: '$(system.defaultworkingdirectory)'
+        Contents: '**/*.jar'
+        TargetFolder: '$(build.artifactstagingdirectory)'
+
+    ## - task: Maven@4
+    ##  displayName: Publish packages to feed
+    ##  inputs:
+    ##    mavenPomFile: 'pom.xml'
+    ##    goals: 'deploy'
+    ##    publishJUnitResults: true
+    ##    testResultsFiles: '**/surefire-reports/TEST-*.xml'
+    ##    javaHomeOption: 'JDKVersion'
+    ##    mavenVersionOption: 'Default'
+    ##    mavenAuthenticateFeed: false # Automatically authenticates with Azure Artifacts feeds
+    ##    effectivePomSkip: false
+    ##    sonarQubeRunAnalysis: false
